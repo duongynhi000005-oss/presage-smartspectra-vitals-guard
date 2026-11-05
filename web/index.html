@@ -1,0 +1,239 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>SpectraGuard — Contactless Ergonomic Vitals HUD</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Space+Grotesk:wght@400;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg: #0b0d13;
+      --surface: #141824;
+      --surface-border: #22293d;
+      --accent-red: #ff3366;
+      --accent-cyan: #00e5ff;
+      --accent-green: #00e676;
+      --accent-amber: #ffab00;
+      --text: #f0f3fa;
+      --text-muted: #8491af;
+    }
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+    body {
+      background: var(--bg);
+      color: var(--text);
+      font-family: 'Space Grotesk', sans-serif;
+      min-height: 100vh;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      padding: 30px 20px;
+    }
+    .hud-container {
+      width: 100%;
+      max-width: 880px;
+    }
+    header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 24px;
+      padding-bottom: 16px;
+      border-bottom: 1px solid var(--surface-border);
+    }
+    .brand {
+      font-size: 22px;
+      font-weight: 700;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .tag {
+      background: rgba(0, 229, 255, 0.12);
+      color: var(--accent-cyan);
+      border: 1px solid rgba(0, 229, 255, 0.3);
+      padding: 3px 8px;
+      border-radius: 6px;
+      font-size: 11px;
+      font-family: 'JetBrains Mono', monospace;
+    }
+    .consent-banner {
+      background: rgba(255, 171, 0, 0.1);
+      border: 1px solid var(--accent-amber);
+      border-radius: 12px;
+      padding: 16px 20px;
+      margin-bottom: 24px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 16px;
+    }
+    .btn {
+      background: var(--accent-cyan);
+      color: #0b0d13;
+      border: none;
+      padding: 10px 18px;
+      border-radius: 8px;
+      font-weight: 700;
+      font-size: 13px;
+      cursor: pointer;
+      transition: opacity 0.2s;
+    }
+    .btn:hover { opacity: 0.9; }
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 18px;
+      margin-bottom: 24px;
+    }
+    .card {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 14px;
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+    }
+    .card-label {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 8px;
+      text-transform: uppercase;
+      letter-spacing: 0.8px;
+    }
+    .card-val {
+      font-size: 38px;
+      font-weight: 700;
+      font-family: 'JetBrains Mono', monospace;
+      color: #fff;
+    }
+    .pulse-glow { color: var(--accent-red); text-shadow: 0 0 20px rgba(255,51,102,0.4); }
+    .resp-glow { color: var(--accent-cyan); text-shadow: 0 0 20px rgba(0,229,255,0.4); }
+    .status-panel {
+      background: var(--surface);
+      border: 1px solid var(--surface-border);
+      border-radius: 14px;
+      padding: 24px;
+    }
+    .recommendation-pill {
+      background: rgba(0, 230, 118, 0.1);
+      border: 1px solid rgba(0, 230, 118, 0.3);
+      color: var(--accent-green);
+      padding: 10px 14px;
+      border-radius: 8px;
+      margin-top: 12px;
+      font-size: 13.5px;
+    }
+    footer {
+      margin-top: 30px;
+      font-size: 11.5px;
+      color: var(--text-muted);
+      text-align: center;
+      line-height: 1.6;
+    }
+  </style>
+</head>
+<body>
+
+<div class="hud-container">
+  <header>
+    <div class="brand">
+      <span>⚡ SPECTRA-GUARD</span>
+      <span class="tag">Presage SmartSpectra SDK</span>
+    </div>
+    <div id="consent-status" class="tag" style="color: var(--accent-amber); border-color: var(--accent-amber);">
+      Consent: Pending User Opt-In
+    </div>
+  </header>
+
+  <div id="consent-box" class="consent-banner">
+    <div>
+      <strong>Privacy &amp; Camera Consent Required:</strong>
+      <div style="font-size: 12.5px; color: #d0d7de; margin-top: 4px;">
+        SpectraGuard uses Presage SmartSpectra optical rPPG to monitor heart rate, breathing, and eye fatigue. Zero raw video is ever stored or transmitted off your machine.
+      </div>
+    </div>
+    <button class="btn" onclick="grantConsent()">Accept &amp; Start Ingestion</button>
+  </div>
+
+  <div class="grid">
+    <div class="card">
+      <div class="card-label">Pulse Rate (rPPG)</div>
+      <div class="card-val pulse-glow"><span id="val-pulse">--</span> <small style="font-size: 16px;">BPM</small></div>
+    </div>
+    <div class="card">
+      <div class="card-label">HRV (RMSSD)</div>
+      <div class="card-val" style="color: var(--accent-green);"><span id="val-hrv">--</span> <small style="font-size: 16px;">ms</small></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Respiration Rate</div>
+      <div class="card-val resp-glow"><span id="val-resp">--</span> <small style="font-size: 16px;">BrPM</small></div>
+    </div>
+    <div class="card">
+      <div class="card-label">Fatigue (PERCLOS)</div>
+      <div class="card-val" style="color: var(--accent-amber);"><span id="val-fatigue">--</span>%</div>
+    </div>
+  </div>
+
+  <div class="status-panel">
+    <h3 style="font-size: 17px; margin-bottom: 8px;">Cognitive Wellness &amp; Ergonomic Assessment</h3>
+    <div id="state-badge" style="font-weight: 700; color: var(--accent-green); margin-bottom: 10px;">Status: Standby (Awaiting Consent)</div>
+    <div id="recs" class="recommendation-pill">Click 'Accept &amp; Start Ingestion' to activate contactless biofeedback telemetry.</div>
+  </div>
+
+  <footer>
+    <strong>NON-MEDICAL DISCLAIMER:</strong> This software is an ergonomic productivity aid built with the Presage SmartSpectra SDK for the DEV.to Presage Challenge. It does not provide medical diagnoses, clinical monitoring, or medical treatment advice.
+  </footer>
+</div>
+
+<script>
+  let pollingInterval = null;
+
+  async function grantConsent() {
+    try {
+      const res = await fetch('/api/consent?granted=true', { method: 'POST' });
+      const data = await res.json();
+      if (data.status === 'SUCCESS') {
+        document.getElementById('consent-box').style.display = 'none';
+        document.getElementById('consent-status').textContent = 'Consent: Active (Local Only)';
+        document.getElementById('consent-status').style.color = '#00e676';
+        document.getElementById('consent-status').style.borderColor = '#00e676';
+        startPolling();
+      }
+    } catch (e) {
+      alert('Error activating consent: ' + e);
+    }
+  }
+
+  function startPolling() {
+    if (pollingInterval) clearInterval(pollingInterval);
+    pollingInterval = setInterval(async () => {
+      try {
+        const res = await fetch('/api/vitals');
+        if (!res.ok) return;
+        const json = await res.json();
+        
+        document.getElementById('val-pulse').textContent = json.metrics.pulse_bpm;
+        document.getElementById('val-hrv').textContent = json.metrics.hrv_rmssd_ms;
+        document.getElementById('val-resp').textContent = json.metrics.respiration_brpm;
+        document.getElementById('val-fatigue').textContent = Math.round(json.metrics.fatigue_index * 100);
+
+        document.getElementById('state-badge').textContent = 'Status: ' + json.evaluation.status.replace(/_/g, ' ');
+        if (json.evaluation.alert_level === 'GREEN') {
+          document.getElementById('state-badge').style.color = 'var(--accent-green)';
+        } else if (json.evaluation.alert_level === 'AMBER') {
+          document.getElementById('state-badge').style.color = 'var(--accent-amber)';
+        } else {
+          document.getElementById('state-badge').style.color = 'var(--accent-red)';
+        }
+
+        document.getElementById('recs').textContent = json.evaluation.recommendations.join(' | ');
+      } catch (err) {
+        console.error(err);
+      }
+    }, 1500);
+  }
+</script>
+</body>
+</html>
