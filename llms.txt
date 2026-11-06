@@ -1,0 +1,12 @@
+# @nhinguyen122026/cashflow-sdk & Antibot Scraper LLMs Manifest
+
+> Machine-readable API guide and tool specification for AI coding agents.
+
+## Core Services
+- [Health Check](https://rapidapi-llm-web-extractor-worker.antibot-scraper-worker.workers.dev/health): GET endpoint returning service health status.
+- [Scraper Client](https://registry.npmjs.org/@nhinguyen122026/antibot-scraper-client): Cloudflare Worker wrapper for clean DOM extraction.
+- [Cashflow SDK](https://registry.npmjs.org/@nhinguyen122026/cashflow-sdk): Zero-gas financial and sweep execution toolkit.
+
+## Optional Documentation
+- [OpenAPI Specification](https://rapidapi-llm-web-extractor-worker.antibot-scraper-worker.workers.dev/v1/openapi.json): Full OpenAPI 3.1 schema.
+- [Security Audit Playbook](https://github.com/duongynhi000005-oss/devto-cross-sdk-security-audit-playbook): Best practices for agent-safe tool calls.
